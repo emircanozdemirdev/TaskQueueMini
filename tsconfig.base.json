@@ -12,6 +12,7 @@
     "declaration": true,
     "sourceMap": true,
     "noEmit": false,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@shared-types/*": ["packages/shared-types/src/*"]
