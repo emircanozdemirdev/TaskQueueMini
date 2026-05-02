@@ -1,11 +1,8 @@
-const bootstrap = (): void => {
-  const sampleResponse = {
-    id: "sample-job-id",
-    status: "queued",
-    createdAt: new Date().toISOString()
-  };
+import { loadConfig } from "./config.js";
 
-  console.log("[api] scaffold ready", sampleResponse);
+const bootstrap = (): void => {
+  const config = loadConfig();
+  console.log("[api] scaffold ready", { port: config.apiPort });
 };
 
 bootstrap();

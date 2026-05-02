@@ -1,6 +1,8 @@
+import { loadConfig } from "./config.js";
+
 const bootstrap = (): void => {
-  const initialStatus = "queued";
-  console.log("[worker] scaffold ready", { initialStatus });
+  const config = loadConfig();
+  console.log("[worker] scaffold ready", { redisHost: config.redisHost });
 };
 
 bootstrap();
