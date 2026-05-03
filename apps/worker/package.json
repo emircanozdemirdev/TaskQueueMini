@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@task-queue-mini/db": "workspace:*",
-    "@task-queue-mini/shared-types": "workspace:*"
+    "@task-queue-mini/queue": "workspace:*",
+    "@task-queue-mini/shared-types": "workspace:*",
+    "bullmq": "^5.58.5"
   },
   "devDependencies": {
     "@types/node": "^25.6.0"
