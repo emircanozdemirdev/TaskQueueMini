@@ -39,6 +39,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@task-queue-mini/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@task-queue-mini/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
@@ -49,9 +52,22 @@ importers:
 
   apps/worker:
     dependencies:
+      '@task-queue-mini/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@task-queue-mini/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
+    devDependencies:
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
+
+  packages/db:
+    dependencies:
+      '@prisma/client':
+        specifier: ^7.8.0
+        version: 7.8.0(prisma@7.8.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@6.0.3))(typescript@6.0.3)
     devDependencies:
       '@types/node':
         specifier: ^25.6.0
