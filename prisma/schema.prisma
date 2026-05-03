@@ -5,3 +5,24 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum JobStatus {
+  queued
+  processing
+  completed
+  failed
+}
+
+model Job {
+  id           String    @id @default(cuid())
+  name         String
+  payload      Json
+  status       JobStatus @default(queued)
+  attemptsMade Int       @default(0)
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  @@map("jobs")
+}
