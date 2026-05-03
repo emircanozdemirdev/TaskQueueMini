@@ -9,6 +9,7 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
+    "@task-queue-mini/db": "workspace:*",
     "@task-queue-mini/shared-types": "workspace:*"
   },
   "devDependencies": {
