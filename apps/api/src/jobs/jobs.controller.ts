@@ -1,10 +1,14 @@
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
+import type { CreateJobResponse } from "@task-queue-mini/shared-types";
 
 import { CreateJobDto } from "./dto/create-job.dto.js";
+import type { JobsService } from "./jobs.service.js";
 
 export class JobsController {
-  create(input: unknown): { accepted: true } {
+  constructor(private readonly jobsService: JobsService) {}
+
+  async create(input: unknown): Promise<CreateJobResponse> {
     const dto = plainToInstance(CreateJobDto, input);
     const validationErrors = validateSync(dto, {
       whitelist: true,
@@ -15,7 +19,6 @@ export class JobsController {
       throw new Error("Invalid create job payload");
     }
 
-    // Enqueue flow will be implemented in step 5.2.
-    return { accepted: true };
+    return await this.jobsService.enqueue(dto);
   }
 }
