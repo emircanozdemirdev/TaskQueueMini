@@ -5,6 +5,12 @@ import { prisma } from "../prisma/prisma.module.js";
 
 const connection = createConnection();
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 export const jobsWorker = new Worker(
   JOBS_QUEUE,
   async (job) => {
@@ -29,6 +35,22 @@ export const jobsWorker = new Worker(
       queueJobId: job.id,
       name: job.name
     });
+
+    const payload = (data["payload"] ?? {}) as Record<string, unknown>;
+    const rawDelay = payload["delayMs"];
+    const delayMs =
+      typeof rawDelay === "number" && Number.isFinite(rawDelay)
+        ? Math.max(0, Math.floor(rawDelay))
+        : 100;
+
+    await delay(delayMs);
+
+    await prisma.job.update({
+      where: { id: jobId },
+      data: { status: JobStatus.completed, completedAt: new Date() }
+    });
+
+    console.log("[worker] job completed", { jobId, delayMs });
   },
   { connection }
 );
