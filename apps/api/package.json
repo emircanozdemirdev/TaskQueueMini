@@ -12,7 +12,9 @@
     "@task-queue-mini/db": "workspace:*",
     "@task-queue-mini/queue": "workspace:*",
     "@task-queue-mini/shared-types": "workspace:*",
-    "bullmq": "^5.58.5"
+    "bullmq": "^5.58.5",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1"
   },
   "devDependencies": {
     "@types/node": "^25.6.0"
