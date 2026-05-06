@@ -2,6 +2,7 @@ import type { Queue } from "bullmq";
 import { JobStatus, type Prisma, type PrismaClient } from "@prisma/client";
 import type { CreateJobResponse } from "@task-queue-mini/shared-types";
 
+import { HttpError } from "../http/errors.js";
 import type { CreateJobDto } from "./dto/create-job.dto.js";
 
 export class JobsService {
@@ -27,7 +28,7 @@ export class JobsService {
       );
     } catch {
       await this.prisma.job.delete({ where: { id: job.id } });
-      throw new Error("Failed to enqueue job");
+      throw new HttpError("Failed to enqueue job", 503, "ENQUEUE_FAILED");
     }
 
     return {
