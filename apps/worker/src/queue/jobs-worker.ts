@@ -56,7 +56,11 @@ export const jobsWorker = new Worker(
 
     await prisma.job.update({
       where: { id: jobId },
-      data: { status: JobStatus.processing, startedAt: new Date() }
+      data: {
+        status: JobStatus.processing,
+        startedAt: new Date(),
+        attemptsMade: job.attemptsMade
+      }
     });
 
     console.log("[worker] marked job as processing", {
@@ -77,7 +81,11 @@ export const jobsWorker = new Worker(
 
     await prisma.job.update({
       where: { id: jobId },
-      data: { status: JobStatus.completed, completedAt: new Date() }
+      data: {
+        status: JobStatus.completed,
+        completedAt: new Date(),
+        attemptsMade: job.attemptsMade
+      }
     });
 
     console.log("[worker] job completed", { jobId, delayMs });
@@ -97,7 +105,13 @@ jobsWorker.on("failed", async (job, err) => {
       : 1;
   const isFinalAttempt = job.attemptsMade >= maxAttempts;
 
-  if (!isFinalAttempt) return;
+  if (!isFinalAttempt) {
+    await prisma.job.update({
+      where: { id: jobId },
+      data: { attemptsMade: job.attemptsMade }
+    });
+    return;
+  }
 
   await prisma.job.update({
     where: { id: jobId },
