@@ -11,11 +11,16 @@ function delay(ms: number): Promise<void> {
   });
 }
 
+function getJobId(data: unknown): string | undefined {
+  const payload = (data ?? {}) as Record<string, unknown>;
+  return typeof payload["jobId"] === "string" ? payload["jobId"] : undefined;
+}
+
 export const jobsWorker = new Worker(
   JOBS_QUEUE,
   async (job) => {
     const data = (job.data ?? {}) as Record<string, unknown>;
-    const jobId = typeof data["jobId"] === "string" ? data["jobId"] : undefined;
+    const jobId = getJobId(data);
 
     if (!jobId) {
       console.log("[worker] job received without jobId", {
@@ -79,6 +84,36 @@ export const jobsWorker = new Worker(
   },
   { connection }
 );
+
+jobsWorker.on("failed", async (job, err) => {
+  if (!job) return;
+
+  const jobId = getJobId(job.data);
+  if (!jobId) return;
+
+  const maxAttempts =
+    typeof job.opts.attempts === "number" && Number.isFinite(job.opts.attempts)
+      ? job.opts.attempts
+      : 1;
+  const isFinalAttempt = job.attemptsMade >= maxAttempts;
+
+  if (!isFinalAttempt) return;
+
+  await prisma.job.update({
+    where: { id: jobId },
+    data: {
+      status: JobStatus.failed,
+      errorMessage: err.message,
+      attemptsMade: job.attemptsMade
+    }
+  });
+
+  console.log("[worker] marked job as failed", {
+    jobId,
+    attemptsMade: job.attemptsMade,
+    reason: err.message
+  });
+});
 
 export async function closeJobsWorker(): Promise<void> {
   await jobsWorker.close();
