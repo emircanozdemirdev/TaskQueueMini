@@ -25,6 +25,30 @@ export const jobsWorker = new Worker(
       return;
     }
 
+    const existingJob = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { status: true }
+    });
+
+    if (!existingJob) {
+      console.log("[worker] jobId not found in database", {
+        jobId,
+        queueJobId: job.id
+      });
+      return;
+    }
+
+    if (
+      existingJob.status === JobStatus.completed ||
+      existingJob.status === JobStatus.failed
+    ) {
+      console.log("[worker] skip already terminal job", {
+        jobId,
+        status: existingJob.status
+      });
+      return;
+    }
+
     await prisma.job.update({
       where: { id: jobId },
       data: { status: JobStatus.processing, startedAt: new Date() }
@@ -33,7 +57,8 @@ export const jobsWorker = new Worker(
     console.log("[worker] marked job as processing", {
       jobId,
       queueJobId: job.id,
-      name: job.name
+      name: job.name,
+      attemptsMade: job.attemptsMade
     });
 
     const payload = (data["payload"] ?? {}) as Record<string, unknown>;
