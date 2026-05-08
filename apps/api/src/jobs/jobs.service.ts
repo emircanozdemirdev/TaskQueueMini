@@ -24,7 +24,11 @@ export class JobsService {
       await this.queue.add(
         dto.name,
         { jobId: job.id, payload: dto.payload },
-        { jobId: job.id }
+        {
+          jobId: job.id,
+          attempts: 3,
+          backoff: { type: "exponential", delay: 1000 }
+        }
       );
     } catch {
       await this.prisma.job.delete({ where: { id: job.id } });
