@@ -26,4 +26,11 @@ export interface JobRecord {
   attemptsMade: number;
   createdAt: Date;
   updatedAt: Date;
+  /** Present when the job failed or was fetched with failure context */
+  errorMessage?: string | null;
+}
+
+export interface JobListPage {
+  items: JobRecord[];
+  nextCursor: string | null;
 }

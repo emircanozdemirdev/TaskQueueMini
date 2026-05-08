@@ -44,7 +44,34 @@ export function createApiServer(options: CreateApiServerOptions): Server {
       }
 
       if (method === "GET" && url.startsWith("/jobs/")) {
-        const id = decodeURIComponent(url.slice("/jobs/".length));
+        const requestUrl = new URL(url, "http://127.0.0.1");
+
+        if (requestUrl.pathname === "/jobs/failed") {
+          try {
+            const result = await jobsController.listFailed({
+              cursor: requestUrl.searchParams.get("cursor") ?? undefined,
+              limit: requestUrl.searchParams.get("limit") ?? undefined
+            });
+            sendJson(res, 200, result);
+          } catch (err) {
+            if (err instanceof HttpError) {
+              sendJson(res, err.statusCode, {
+                error: { code: err.code, message: err.message }
+              });
+              return;
+            }
+            console.error(err);
+            sendJson(res, 500, {
+              error: {
+                code: "INTERNAL_ERROR",
+                message: "An unexpected error occurred"
+              }
+            });
+          }
+          return;
+        }
+
+        const id = decodeURIComponent(requestUrl.pathname.slice("/jobs/".length));
         if (!id) {
           sendJson(res, 400, {
             error: { code: "VALIDATION_ERROR", message: "Job id is required" }
