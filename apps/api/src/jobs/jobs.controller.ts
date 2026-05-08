@@ -1,6 +1,6 @@
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
-import type { CreateJobResponse } from "@task-queue-mini/shared-types";
+import type { CreateJobResponse, JobRecord } from "@task-queue-mini/shared-types";
 
 import { HttpError } from "../http/errors.js";
 import { CreateJobDto } from "./dto/create-job.dto.js";
@@ -26,5 +26,9 @@ export class JobsController {
     }
 
     return await this.jobsService.enqueue(dto);
+  }
+
+  async getById(id: string): Promise<JobRecord> {
+    return await this.jobsService.getById(id);
   }
 }
