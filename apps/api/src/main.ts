@@ -4,11 +4,15 @@ import { loadConfig } from "./config.js";
 import { createApiServer } from "./http/server.js";
 import { JobsController } from "./jobs/jobs.controller.js";
 import { JobsService } from "./jobs/jobs.service.js";
+import { MetricsController } from "./metrics/metrics.controller.js";
+import { MetricsService } from "./metrics/metrics.service.js";
 import { disconnectPrisma, prisma } from "./prisma/prisma.module.js";
 import { closeJobsQueue, jobsQueue } from "./queue/jobs-queue.js";
 
 const jobsService = new JobsService(prisma, jobsQueue);
 const jobsController = new JobsController(jobsService);
+const metricsService = new MetricsService(prisma, jobsQueue);
+const metricsController = new MetricsController(metricsService);
 
 let httpServer: Server | undefined;
 
@@ -18,7 +22,7 @@ async function bootstrap(): Promise<void> {
   console.log("[api] prisma connected", { port: config.apiPort });
   console.log("[api] bullmq queue ready", { name: jobsQueue.name });
 
-  httpServer = createApiServer({ jobsController });
+  httpServer = createApiServer({ jobsController, metricsController });
   await new Promise<void>((resolve, reject) => {
     httpServer!.listen(config.apiPort, () => resolve());
     httpServer!.on("error", reject);
