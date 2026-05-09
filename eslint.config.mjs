@@ -9,6 +9,18 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["**/*.test.ts"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.jest
+      }
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off"
+    }
+  },
+  {
     files: ["**/*.ts", "**/*.tsx", "**/*.cts", "**/*.mts"],
     languageOptions: {
       parserOptions: {
