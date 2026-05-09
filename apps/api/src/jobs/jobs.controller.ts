@@ -1,6 +1,6 @@
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
-import type { CreateJobResponse } from "@task-queue-mini/shared-types";
+import type { CreateJobResponse, JobListPage, JobRecord } from "@task-queue-mini/shared-types";
 
 import { HttpError } from "../http/errors.js";
 import { CreateJobDto } from "./dto/create-job.dto.js";
@@ -26,5 +26,25 @@ export class JobsController {
     }
 
     return await this.jobsService.enqueue(dto);
+  }
+
+  async getById(id: string): Promise<JobRecord> {
+    return await this.jobsService.getById(id);
+  }
+
+  async listFailed(query: { cursor?: string; limit?: string }): Promise<JobListPage> {
+    let limit = 20;
+    if (query.limit !== undefined && query.limit.length > 0) {
+      const n = Number.parseInt(query.limit, 10);
+      if (!Number.isFinite(n) || n < 1 || n > 100) {
+        throw new HttpError("limit must be between 1 and 100", 400, "VALIDATION_ERROR");
+      }
+      limit = n;
+    }
+
+    const cursor =
+      query.cursor !== undefined && query.cursor.length > 0 ? query.cursor : undefined;
+
+    return await this.jobsService.listFailed({ cursor, limit });
   }
 }

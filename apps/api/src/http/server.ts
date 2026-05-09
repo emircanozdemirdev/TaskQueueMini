@@ -6,6 +6,7 @@ import {
 } from "node:http";
 
 import type { JobsController } from "../jobs/jobs.controller.js";
+import type { MetricsController } from "../metrics/metrics.controller.js";
 import { HttpError } from "./errors.js";
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
@@ -28,10 +29,11 @@ function readBody(req: IncomingMessage): Promise<string> {
 
 export interface CreateApiServerOptions {
   jobsController: JobsController;
+  metricsController: MetricsController;
 }
 
 export function createApiServer(options: CreateApiServerOptions): Server {
-  const { jobsController } = options;
+  const { jobsController, metricsController } = options;
 
   return createServer(async (req, res) => {
     try {
@@ -40,6 +42,82 @@ export function createApiServer(options: CreateApiServerOptions): Server {
 
       if (method === "GET" && url === "/health") {
         sendJson(res, 200, { ok: true });
+        return;
+      }
+
+      if (method === "GET") {
+        const metricsUrl = new URL(url, "http://127.0.0.1");
+        if (metricsUrl.pathname === "/metrics") {
+          try {
+            const result = await metricsController.get();
+            sendJson(res, 200, result);
+          } catch (err) {
+            console.error(err);
+            sendJson(res, 500, {
+              error: {
+                code: "INTERNAL_ERROR",
+                message: "An unexpected error occurred"
+              }
+            });
+          }
+          return;
+        }
+      }
+
+      if (method === "GET" && url.startsWith("/jobs/")) {
+        const requestUrl = new URL(url, "http://127.0.0.1");
+
+        if (requestUrl.pathname === "/jobs/failed") {
+          try {
+            const result = await jobsController.listFailed({
+              cursor: requestUrl.searchParams.get("cursor") ?? undefined,
+              limit: requestUrl.searchParams.get("limit") ?? undefined
+            });
+            sendJson(res, 200, result);
+          } catch (err) {
+            if (err instanceof HttpError) {
+              sendJson(res, err.statusCode, {
+                error: { code: err.code, message: err.message }
+              });
+              return;
+            }
+            console.error(err);
+            sendJson(res, 500, {
+              error: {
+                code: "INTERNAL_ERROR",
+                message: "An unexpected error occurred"
+              }
+            });
+          }
+          return;
+        }
+
+        const id = decodeURIComponent(requestUrl.pathname.slice("/jobs/".length));
+        if (!id) {
+          sendJson(res, 400, {
+            error: { code: "VALIDATION_ERROR", message: "Job id is required" }
+          });
+          return;
+        }
+
+        try {
+          const result = await jobsController.getById(id);
+          sendJson(res, 200, result);
+        } catch (err) {
+          if (err instanceof HttpError) {
+            sendJson(res, err.statusCode, {
+              error: { code: err.code, message: err.message }
+            });
+            return;
+          }
+          console.error(err);
+          sendJson(res, 500, {
+            error: {
+              code: "INTERNAL_ERROR",
+              message: "An unexpected error occurred"
+            }
+          });
+        }
         return;
       }
 
