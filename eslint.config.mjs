@@ -9,7 +9,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["**/*.test.ts"],
+    files: ["**/*.test.ts", "**/*.e2e.test.ts"],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -18,6 +18,14 @@ export default tseslint.config(
     },
     rules: {
       "@typescript-eslint/no-explicit-any": "off"
+    }
+  },
+  {
+    files: ["**/*.mjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      }
     }
   },
   {
